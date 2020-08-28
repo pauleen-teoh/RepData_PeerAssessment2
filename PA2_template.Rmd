@@ -1,0 +1,156 @@
+---
+title: "Reproducible Research Peer Assessment 2"
+author: "Pauleen Teoh"
+date: "27/08/2020"
+output: html_document
+---
+
+## Introduction
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+## Data
+
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. Download url:
+https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
+
+## Synopsis
+
+With the data provided by the U.S. National Oceanic and Atmospheric Administration’s storm database, the finding shows the most harmful events are TORNADO with 5633 people killed and 91346 people injured which total up to 96979; followed by EXCESSIVE HEAT with 1903 people killed and 6525 people injured which total up to 8429.
+
+The findings also shows the events with the most economic consequences over United States for property are the FLOODS with USD 145 billions in damages followed by the HURRICANES/TYPHOON (USD 69 billions) and TYPHOONS (USD 57 billions). Whereas for crop are the DROUGHT with USD 14 billions in damages followed by the FLOOD (USD 5.7 billions) and RIVER FLOOD (USD 5 billions). 
+
+## Data Processing
+
+```{R dataprocess, echo = TRUE, cache = TRUE}
+
+storm_bz2_file <- "storm.csv.bz2"
+
+# Check if archive already exists.
+if(!file.exists(storm_bz2_file)){
+    file_url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+    download.file(file_url, storm_bz2_file, method="curl")
+} 
+
+# read data from storm_bz2_file into storm_df data frame
+storm_df <- read.csv(storm_bz2_file)
+
+# only read variables relevant this assignment
+storm_df <- storm_df[ , c("EVTYPE", "FATALITIES", "INJURIES", "PROPDMG", "PROPDMGEXP", "CROPDMG", "CROPDMGEXP")]
+
+# change all event names to upper case for more accurate processing
+storm_df$EVTYPE <- toupper(storm_df$EVTYPE)
+storm_df$PROPDMGEXP <- toupper(storm_df$PROPDMGEXP)
+storm_df$CROPDMGEXP <- toupper(storm_df$CROPDMGEXP)
+
+# check no. of observations and variables
+str(storm_df)
+```
+
+## Goal of Assignment
+
+The basic goal of this assignment is to explore the NOAA Storm Database and answer some basic questions about severe weather events.
+
+## Results
+
+1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+```{R mostharmfulevents, echo = TRUE, cache = TRUE}
+fatality <- tapply(storm_df$FATALITIES, storm_df$EVTYPE, sum)
+fatality <- sort(fatality, decreasing = TRUE)
+
+# check most harmful events (fatality) before plot the barchart
+head(fatality)
+
+par(mar=c(8,6,4,2))
+
+# Top 10 most harmful events for fatality
+barplot(height = fatality[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Most Harmful Events for Fatality Across the US")
+mtext(text = "Events Types",side =1, line = 6)
+mtext(text = "No of Fatality", side = 2, line = 4)
+
+injury <- tapply(storm_df$INJURIES, storm_df$EVTYPE, sum)
+injury <- sort(injury, decreasing = TRUE)
+
+# check most harmful events (injury) before plot the barchart
+head(injury)
+
+par(mar=c(8,6,4,2))
+
+# Top 10 most harmful events for injury
+barplot(height = injury[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Most Harmful Events for Injury Across the US")
+mtext(text = "Events Types",side =1, line = 6)
+mtext(text = "No of Injury", side = 2, line = 4)
+```
+
+Top 10 most harmful events for both fatality and injury are shown in their respective bar chart.
+
+
+
+2. Across the United States, which types of events have the greatest economic consequences?
+
+```{R greatesteconomicconsequences, echo = TRUE, cache = TRUE}
+# load plyr
+library(plyr)
+
+# Check all available unique values for PROPDMGEXP & CROPDMGEXP
+unique((storm_df$PROPDMGEXP))
+unique(storm_df$CROPDMGEXP)
+
+# map values accordingly, H (Hundred), K (Thousand), M (Million)...
+propdmg <- mapvalues(storm_df$PROPDMGEXP,
+c("K","M","","B","+","0","5","6","?","4","2","3","H","7","-","1","8"), 
+c(1e3,1e6,1,1e9,1,1,1e5,1e6,1,1e4,1e2,1e3,1e2,1e7,1,10,1e8))
+
+cropdmg <- mapvalues(storm_df$CROPDMGEXP,
+c("","M","K","B","?","0","2"),
+c(1,1e6,1e3,1e9,1,1,1e2))
+
+# create new variables to get the total expenses, PROPDMG * tmpPROPDMG & CROPDMG * tmpCROPDMG
+storm_df$TOT_PROPDMGEXP <- storm_df$PROPDMG * as.numeric(propdmg)
+storm_df$TOT_CROPDMGEXP <- storm_df$CROPDMG * as.numeric(cropdmg)
+
+# storm dataframe with 2 new variables
+str(storm_df)
+
+propdmg <- tapply(storm_df$TOT_PROPDMGEXP, storm_df$EVTYPE, sum)
+propdmg <- sort(propdmg, decreasing = TRUE)
+
+par(mar=c(8,6,4,2))
+
+# Top 10 greatest economic consequences events for property
+barplot(height = propdmg[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Greatest Economic Consequences Events Across the US (Property)")
+mtext(text = "Events Types",side =1, line = 6)
+mtext(text = "Property Damage (Total USD)", side = 2, line = 4)
+
+cropdmg <- tapply(storm_df$TOT_CROPDMGEXP, storm_df$EVTYPE, sum)
+cropdmg <- sort(cropdmg, decreasing = TRUE)
+
+par(mar=c(8,4,4,4))
+
+# Top 10 greatest economic consequences events for crop
+barplot(height = cropdmg[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Greatest Economic Consequences Events Across the US (Crop)")
+mtext(text = "Events Types",side =1, line = 6)
+mtext(text = "Crop Damage (Total USD)", side = 2, line = 4)
+```
+
+The variables PROPDMGEXP and CROPDMGEXP have the factor of multiplicity of the variables PROPDMG and CROPDMG with the values:
+
+- H (Hundred) : 1^10e2
+
+- K (Thousand) : 1^10e3
+
+- M (Million) : 1^10e6
+
+- B (Billion) : 1^10e9
+
+- numeric -> 1^10e(numeric)
+
+
+Top 10 damages for both property and crop are shown in their respective bar chart.
+
+# Conclusion
+With the data provided by the U.S. National Oceanic and Atmospheric Administration’s storm database, the most harmful events to health and events with the greatest economic consequences are identified. Total fatality and injury across the US is 105,408 people from TORNADO and EXCESSIVE HEAT. The total damage for property and crop is USD 159 billions as a result of FLOODS/RIVER FLOODS, HURRICANES/TYPHOON and DROUGHT.
+
