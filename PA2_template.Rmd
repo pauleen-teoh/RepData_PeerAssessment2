@@ -64,12 +64,12 @@ fatality <- sort(fatality, decreasing = TRUE)
 # check most harmful events (fatality) before plot the barchart
 head(fatality)
 
-par(mar=c(8,6,4,2))
+par(mfrow = c(2,1), mar=c(5,4,2,1))
 
 # Top 10 most harmful events for fatality
-barplot(height = fatality[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Most Harmful Events for Fatality Across the US")
-mtext(text = "Events Types",side =1, line = 6)
-mtext(text = "No of Fatality", side = 2, line = 4)
+barplot(height = fatality[1:10], cex.axis = 0.6, cex.name = 0.6, las = 2, legend.text = "Fatality", col = "red")
+title(main = "Top 10 Most Harmful Events", font = 3)
+mtext(text = "No of Fatality", side = 2, line = 3, cex = 0.8)
 
 injury <- tapply(storm_df$INJURIES, storm_df$EVTYPE, sum)
 injury <- sort(injury, decreasing = TRUE)
@@ -77,13 +77,12 @@ injury <- sort(injury, decreasing = TRUE)
 # check most harmful events (injury) before plot the barchart
 head(injury)
 
-par(mar=c(8,6,4,2))
-
 # Top 10 most harmful events for injury
-barplot(height = injury[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Most Harmful Events for Injury Across the US")
-mtext(text = "Events Types",side =1, line = 6)
-mtext(text = "No of Injury", side = 2, line = 4)
+barplot(height = injury[1:10], cex.axis = 0.6, cex.name = 0.6, las = 2, legend.text = "Injury", col = "blue")
+mtext(text = "Events Types",side = 1, line = 4, cex = 0.8)
+mtext(text = "No of Injury", side = 2, line = 3, cex = 0.8)
 ```
+
 
 Top 10 most harmful events for both fatality and injury are shown in their respective bar chart.
 
@@ -121,7 +120,7 @@ propdmg <- sort(propdmg, decreasing = TRUE)
 par(mar=c(8,6,4,2))
 
 # Top 10 greatest economic consequences events for property
-barplot(height = propdmg[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Greatest Economic Consequences Events Across the US (Property)")
+barplot(height = propdmg[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Greatest Economic Consequences Events (Property)")
 mtext(text = "Events Types",side =1, line = 6)
 mtext(text = "Property Damage (Total USD)", side = 2, line = 4)
 
@@ -131,7 +130,7 @@ cropdmg <- sort(cropdmg, decreasing = TRUE)
 par(mar=c(8,4,4,4))
 
 # Top 10 greatest economic consequences events for crop
-barplot(height = cropdmg[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Greatest Economic Consequences Events Across the US (Crop)")
+barplot(height = cropdmg[1:10], cex.axis = 0.75, cex.name = 0.7, las = 2, main = "Top 10 Greatest Economic Consequences Events (Crop)")
 mtext(text = "Events Types",side =1, line = 6)
 mtext(text = "Crop Damage (Total USD)", side = 2, line = 4)
 ```
